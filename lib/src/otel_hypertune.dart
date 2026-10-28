@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_hypertune_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_hypertune';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class HypertuneResult {
+  /// Creates a result.
   const HypertuneResult({
     this.fieldPath,
     this.environment,
@@ -57,8 +58,13 @@ class HypertuneResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class HypertuneCallResult<T> {
+  /// Creates a call result.
   const HypertuneCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final HypertuneResult? result;
 }
@@ -84,68 +90,68 @@ Future<T> tracedHypertune<T>({
   final span = _tracer().startSpan(
     'hypertune $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.fieldPath != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'hypertune.field.path',
           r.result!.fieldPath!,
         ));
       }
       if (r.result!.environment != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'hypertune.environment',
           r.result!.environment!,
         ));
       }
       if (r.result!.split != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'hypertune.split',
           r.result!.split!,
         ));
       }
       if (r.result!.variant != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'hypertune.variant',
           r.result!.variant!,
         ));
       }
       if (r.result!.logicalType != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'hypertune.logical_type',
           r.result!.logicalType!,
         ));
       }
       if (r.result!.fromCache != null) {
-        extras.add(OTel.attributeBool(
+        extras.add(OTelAPI.attributeBool(
           'hypertune.from_cache',
           r.result!.fromCache!,
         ));
       }
       if (r.result!.commitId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'hypertune.commit.id',
           r.result!.commitId!,
         ));
       }
       if (r.result!.eventsLogged != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'hypertune.events_logged',
           r.result!.eventsLogged!,
         ));
       }
       if (r.result!.requestId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'hypertune.request.id',
           r.result!.requestId!,
         ));
       }
       if (r.result!.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           r.result!.statusCode!,
         ));
@@ -156,13 +162,13 @@ Future<T> tracedHypertune<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
